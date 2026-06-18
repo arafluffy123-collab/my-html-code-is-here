@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Araf's Enterprise OS & Architecture Hub</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1d;
+            --bg-surface: #121829;
+            --bg-card: #1c233d;
+            --text-main: #f0f4f8;
+            --text-muted: #8da2bb;
+            --gemini-blue: #2563eb;
+            --gemini-cyan: #06b6d4;
+            --deepseek-green: #10b981;
+            --deepseek-dark: #052e16;
+            --terminal-bg: #030712;
+            --border-color: #2e3757;
+            --gold-accent: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            overflow-x: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Fixed Corporate Header */
+        header {
+            background-color: rgba(18, 24, 41, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            height: 80px;
+        }
+
+        .brand-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff 30%, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-title span {
+            font-size: 0.85rem;
+            background: linear-gradient(90deg, var(--gemini-blue), var(--gemini-cyan));
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            -webkit-text-fill-color: initial;
+        }
+
+        .metrics-bar {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .metric-counter {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .metric-value {
+            font-family: monospace;
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--gold-accent);
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        /* Main Workspace Hub */
+        .app-container {
+            margin-top: 80px;
+            height: calc(100vh - 80px);
+            display: flex;
+            width: 100%;
+        }
+
+        /* Navigation Rail */
+        nav {
+            width: 260px;
+            background-color: var(--bg-surface);
+            border-right: 1px solid var(--border-color);
+            padding: 30px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-button {
+            width: 100%;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-button:hover {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-main);
+        }
+
+        .nav-button.active[data-target="gemini"] {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.15), rgba(6, 182, 212, 0.05));
+            border-color: rgba(37, 99, 235, 0.4);
+            color: var(--text-main);
+            box-shadow: inset 4px 0 0 var(--gemini-blue);
+        }
+
+        .nav-button.active[data-target="deepseek"] {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), rgba(5, 46, 22, 0.05));
+            border-color: rgba(16, 185, 129, 0.4);
+            color: var(--text-main);
+            box-shadow: inset 4px 0 0 var(--deepseek-green);
+        }
+
+        /* Content Viewport Modules */
+        .viewport-wrapper {
+            flex-grow: 1;
+            position: relative;
+            background: var(--bg-primary);
+        }
+
+        .module-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            overflow-y: auto;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .module-viewport.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* MODULE 1: GEMINI CORE */
+        .section-header {
+            margin-bottom: 30px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .portfolio-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .building-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .building-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .building-card.blue-tower::before { background: var(--gemini-blue); }
+        .building-card.green-plaza::before { background: var(--deepseek-green); }
+
+        .building-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 1px 1px rgba(255,255,255,0.1) inset;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .card-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .building-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .building-type {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .blue-tower .building-type {
+            background: rgba(37, 99, 235, 0.15);
+            color: #60a5fa;
+        }
+
+        .green-plaza .building-type {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.15);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .inject-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gemini-blue), #1d4ed8);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .inject-btn:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .inject-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Ledger / Transaction History Panel */
+        .ledger-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            height: calc(100vh - 210px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ledger-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ledger-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 5px;
+        }
+
+        .ledger-item {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-left: 3px solid var(--gemini-cyan);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateX(20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .ledger-item-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .ledger-item-amount {
+            font-family: monospace;
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        /* MODULE 2: DEEPSEEK SYSTEM MODULE */
+        .terminal-container {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            height: calc(100vh - 210px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .terminal-header {
+            background: #111827;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.r { background-color: #ef4444; }
+        .dot.y { background-color: #f59e0b; }
+        .dot.g { background-color: #10b981; }
+
+        .terminal-title {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-body {
+            flex-grow: 1;
+            padding: 25px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #34d399;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-history {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .terminal-row {
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .terminal-input-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .prompt-symbol {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #34d399;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            flex-grow: 1;
+        }
+
+        /* Compilation Overlay Layer */
+        .pipeline-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(3, 7, 18, 0.98);
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .pipeline-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .pipeline-header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .pipeline-title {
+            font-family: monospace;
+            font-size: 1.2rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pipeline-logs {
+            flex-grow: 1;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-entry {
+            line-height: 1.4;
+        }
+
+        .log-entry.success { color: var(--deepseek-green); }
+        .log-entry.info { color: #3b82f6; }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            height: 12px;
+            border-radius: 9999px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--deepseek-green), #059669);
+            box-shadow: 0 0 10px var(--deepseek-green);
+            transition: width 0.1s linear;
+        }
+
+        /* Visual Alert Bar */
+        .system-alert-banner {
+            background: linear-gradient(90deg, var(--deepseek-green), var(--gemini-blue));
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-title">
+            ARAF ENTERPRISE METRICS <span>v4.0.2</span>
+        </div>
+        <div class="metrics-bar">
+            <div class="metric-counter">
+                <span class="metric-label">Managed Assets</span>
+                <span class="metric-value" id="global-assets-count">0</span>
+            </div>
+            <div class="metric-counter">
+                <span class="metric-label">Active Host Kernel</span>
+                <span class="metric-value" id="global-kernel-status" style="color: #60a5fa;">None</span>
+            </div>
+            <div class="metric-counter">
+                <span class="metric-label">Imperial Capital Balance</span>
+                <span class="metric-value" id="global-sheckle-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-container">
+        
+        <nav>
+            <button class="nav-button active" data-target="gemini">
+                🏛️ Gemini Architecture
+            </button>
+            <button class="nav-button" data-target="deepseek">
+                💻 DeepSeek Core Systems
+            </button>
+        </nav>
+
+        <div class="viewport-wrapper">
+
+            <div class="module-viewport active" id="viewport-gemini">
+                <div class="system-alert-banner" id="iso-success-banner">
+                    <span>🚀 HOST INSTANCE UPGRADED: Custom deployment ISO layer generated successfully via deepseek build pipeline!</span>
+                    <button style="background:transparent; border:none; color:white; cursor:pointer;" onclick="this.parentElement.style.display='none'">✕</button>
+                </div>
+
+                <div class="section-header">
+                    <h2>Luxury High-Rise Asset Tracker</h2>
+                    <p>Allocate capital variables across metropolitan assets within the 480 Quadrillion Garden Sheckle Matrix.</p>
+                </div>
+
+                <div class="portfolio-layout">
+                    <div class="asset-grid" id="real-estate-grid">
+                        </div>
+
+                    <div class="ledger-panel">
+                        <div class="ledger-title">
+                            <span>Transaction Ledger</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">Real-time stream</span>
+                        </div>
+                        <div class="ledger-list" id="ledger-stream">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-viewport" id="viewport-deepseek">
+                <div class="section-header">
+                    <h2>Advanced Host Build Environment</h2>
+                    <p>Interface directly with target runtime compilation hooks and assemble custom Linux images.</p>
+                </div>
+
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot r"></div>
+                            <div class="dot y"></div>
+                            <div class="dot g"></div>
+                        </div>
+                        <div class="terminal-title">root@araf-subsystem:~</div>
+                        <div></div>
+                    </div>
+                    
+                    <div class="terminal-body" id="cli-body">
+                        <div class="terminal-history" id="cli-history">
+                            <div class="terminal-row">Welcome to ArafOS System Builder Shell.</div>
+                            <div class="terminal-row">Type 'help' to fetch operational system functions.</div>
+                            <div class="terminal-row"></div>
+                        </div>
+                        <div class="terminal-input-line">
+                            <span class="prompt-symbol">arafOS #</span>
+                            <input type="text" class="terminal-input" id="cli-input" autofocus autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+
+                    <div class="pipeline-overlay" id="compilation-layer">
+                        <div class="pipeline-header">
+                            <div class="pipeline-title">
+                                <span style="color: var(--deepseek-green);">⚙️ ISO TARGET ENGINE:</span> Assembling s14pup64 Slackware Core Layer
+                            </div>
+                        </div>
+                        <div class="pipeline-logs" id="pipeline-log-stream">
+                            </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="pipeline-progress-node"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // 1. Immutable Global Application State Initialization Engine
+        window.arafSystemData = {
+            sheckles: 480000000000000000, 
+            activeISO: 'None',
+            compilationStatus: 'Idle',
+            systemUpgrades: [],
+            totalAssetsManaged: 5
+        };
+
+        // Static Structural Mock Array Meta-Data
+        const architecturalProperties = [
+            { id: 'bt_01', name: 'Blue Glass Towers (HQ)', type: 'Blue Tower', valuation: 140000000000000, efficiency: '94.2%', capitalInjected: 0 },
+            { id: 'gp_02', name: 'Green Steel Plazas', type: 'Green Plaza', valuation: 95000000000000, efficiency: '88.7%', capitalInjected: 0 },
+            { id: 'pt_03', name: 'Metropolitan Penthouse A', type: 'Blue Tower', valuation: 320000000000000, efficiency: '99.1%', capitalInjected: 0 },
+            { id: 'gp_04', name: 'Imperial Garden Complex', type: 'Green Plaza', valuation: 12000000000000, efficiency: '91.5%', capitalInjected: 0 },
+            { id: 'bt_05', name: 'Silicon Skyline Hub', type: 'Blue Tower', valuation: 85000000000000, efficiency: '82.3%', capitalInjected: 0 }
+        ];
+
+        // 2. Formatting Helpers
+        function formatSheckles(num) {
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num) + " 💰";
+        }
+
+        // 3. System Viewport Rendering Coordination Logic
+        function syncUIStateAndDOMCounters() {
+            document.getElementById('global-sheckle-count').innerText = formatSheckles(window.arafSystemData.sheckles);
+            document.getElementById('global-assets-count').innerText = window.arafSystemData.totalAssetsManaged;
+            document.getElementById('global-kernel-status').innerText = window.arafSystemData.activeISO;
+            if (window.arafSystemData.activeISO !== 'None') {
+                document.getElementById('global-kernel-status').style.color = 'var(--deepseek-green)';
+            }
+        }
+
+        // Navigation Controller Event Bindings
+        document.querySelectorAll('.nav-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.module-viewport').forEach(v => v.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const targetView = btn.getAttribute('data-target');
+                document.getElementById(`viewport-${targetView}`).classList.add('active');
+
+                if(targetView === 'deepseek') {
+                    setTimeout(() => document.getElementById('cli-input').focus(), 50);
+                }
+            });
+        });
+
+        // 4. THE GEMINI ARCHITECTURE MODULE ENGINE LOGIC
+        function initializeAssetGrid() {
+            const gridContainer = document.getElementById('real-estate-grid');
+            gridContainer.innerHTML = '';
+
+            architecturalProperties.forEach(asset => {
+                const card = document.createElement('div');
+                card.className = `building-card ${asset.type === 'Blue Tower' ? 'blue-tower' : 'green-plaza'}`;
+                card.innerHTML = `
+                    <div class="card-body">
+                        <div class="card-header-flex">
+                            <div class="building-name">${asset.name}</div>
+                            <div class="building-type">${asset.type}</div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <span class="stat-label">Structural Net Worth</span>
+                                <span class="stat-value">${formatSheckles(asset.valuation)}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Core Efficiency</span>
+                                <span class="stat-value" style="color: var(--deepseek-green);">${asset.efficiency}</span>
+                            </div>
+                        </div>
+                        <div class="stats-row" style="margin-top: -10px;">
+                            <div class="stat-item" style="grid-column: span 2;">
+                                <span class="stat-label">Injected Imperial Capital</span>
+                                <span class="stat-value" id="injected-val-${asset.id}" style="color: var(--gold-accent);">${formatSheckles(asset.capitalInjected)}</span>
+                            </div>
+                        </div>
+                        <button class="inject-btn" onclick="injectCapitalField('${asset.id}')">
+                            💎 Inject Sheckle Capital
+                        </button>
+                    </div>
+                `;
+                gridContainer.appendChild(card);
+            });
+        }
+
+        function injectCapitalField(assetId) {
+            const investmentQuantum = 500000000000000; // Deduct step size
+            if (window.arafSystemData.sheckles >= investmentQuantum) {
+                window.arafSystemData.sheckles -= investmentQuantum;
+                
+                const targetObj = architecturalProperties.find(a => a.id === assetId);
+                targetObj.capitalInjected += investmentQuantum;
+                targetObj.valuation += (investmentQuantum * 1.25); // Appreciation logic calculus
+
+                document.getElementById(`injected-val-${assetId}`).innerText = formatSheckles(targetObj.capitalInjected);
+                
+                // Add tracking element log to the ledger viewport DOM stack
+                pushLedgerTransaction(targetObj.name, investmentQuantum);
+                
+                // Update global metric displays
+                initializeAssetGrid();
+                syncUIStateAndDOMCounters();
+            } else {
+                alert("Insufficient state balance inside Imperial Sovereign Reserves.");
+            }
+        }
+
+        function pushLedgerTransaction(assetName, amount) {
+            const stream = document.getElementById('ledger-stream');
+            const item = document.createElement('div');
+            item.className = 'ledger-item';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            item.innerHTML = `
+                <div class="ledger-item-header">
+                    <span>${assetName} System Input</span>
+                    <span>${timestamp}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                    <span style="color:var(--text-muted);">Capital Infusion Status:</span>
+                    <span class="ledger-item-amount">-${formatSheckles(amount)}</span>
+                </div>
+            `;
+            stream.insertBefore(item, stream.firstChild);
+        }
+
+        // 5. THE DEEPSEEK SUBSYSTEM MODULE SYSTEM CLI SHELL LOGIC
+        const terminalInputNode = document.getElementById('cli-input');
+        const terminalHistoryContainer = document.getElementById('cli-history');
+
+        terminalInputNode.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const queryCommand = this.value.trim();
+                if (queryCommand.length > 0) {
+                    processTerminalInstructionCommand(queryCommand);
+                }
+                this.value = '';
+            }
+        });
+
+        function printTerminalRow(text, color = '#34d399') {
+            const row = document.createElement('div');
+            row.className = 'terminal-row';
+            row.style.color = color;
+            row.textContent = text;
+            terminalHistoryContainer.appendChild(row);
+            document.getElementById('cli-body').scrollTop = document.getElementById('cli-body').scrollHeight;
+        }
+
+        function processTerminalInstructionCommand(rawInputStr) {
+            printTerminalRow(`arafOS # ${rawInputStr}`, '#60a5fa');
+            
+            const standardizedArgs = rawInputStr.toLowerCase().split(' ');
+            const primaryInstruction = standardizedArgs[0];
+
+            switch(primaryInstruction) {
+                case 'help':
+                    printTerminalRow('Available core system options layout:');
+                    printTerminalRow('  help         - Output structural operational mappings layout list.');
+                    printTerminalRow('  status       - Extract running tracking metrics and upgrade layers.');
+                    printTerminalRow('  build_iso    - Fire automated pipeline compilation build tool sequence.');
+                    printTerminalRow('  clear        - Scrub line historical stack indices clean.');
+                    break;
+                case 'clear':
+                    terminalHistoryContainer.innerHTML = '';
+                    break;
+                case 'status':
+                    printTerminalRow('--- EMPIRE INFRASTRUCTURE SYSTEM METRICS ---', varName = '--gold-accent');
+                    printTerminalRow(`  Imperial Financial Vault: ${formatSheckles(window.arafSystemData.sheckles)}`);
+                    printTerminalRow(`  Host Distribution Core:   ${window.arafSystemData.activeISO}`);
+                    printTerminalRow(`  Total Properties Managed: ${window.arafSystemData.totalAssetsManaged}`);
+                    printTerminalRow(`  System Engine Patches:    [${window.arafSystemData.systemUpgrades.join(', ') || 'No Patches Running'}]`);
+                    break;
+                case 'build_iso':
+                    if (window.arafSystemData.compilationStatus === 'Running') {
+                        printTerminalRow('Error: Multi-thread conflict detected. A compilation task is actively running.', '#ef4444');
+                    } else {
+                        executeBackgroundISOCompilationSequence();
+                    }
+                    break;
+                default:
+                    printTerminalRow(`Instruction set vector exception: command unknown or invalid -> "${primaryInstruction}". Type 'help' for support structure logs.`, '#ef4444');
+            }
+        }
+
+        // 6. PIPELINE COMPILE ITERATION LOOP INTERACTION CONTROLLER
+        function executeBackgroundISOCompilationSequence() {
+            window.arafSystemData.compilationStatus = 'Running';
+            const layerOverlay = document.getElementById('compilation-layer');
+            const logContainer = document.getElementById('pipeline-log-stream');
+            const visualProgressFill = document.getElementById('pipeline-progress-node');
+
+            logContainer.innerHTML = '';
+            visualProgressFill.style.width = '0%';
+            layerOverlay.classList.add('active');
+
+            const structuralLogMatrix = [
+                { t: 'Initializing woof-CE environment pipeline tree inside /usr/src/woof...', c: 'info' },
+                { t: 'Synchronizing master architectural repositories configuration mappings...', c: 'info' },
+                { t: 'Target image specification: s14pup64 (Slackware Binary Compatibility x86_64)', c: 'success' },
+                { t: 'Executing task configuration file layer execution: ./0setup', c: 'info' },
+                { t: 'Downloading base core binary packages from upstream primary fallback mirrors...', c: 'info' },
+                { t: 'Extracting package arrays: tar -xf base_packages.tar.gz -C /sys/root', c: 'info' },
+                { t: 'Stripping development debug headers and stripping redundant manual layers...', c: 'info' },
+                { t: 'Injecting kernel optimization configurations for AMD Vega 3 Graphics...', c: 'success' },
+                { t: 'Hardcoding target hardware driver dependency: xf86-video-amdgpu', c: 'info' },
+                { t: 'Injecting firmware package parameters: kernel-firmware-amdgpu-2026', c: 'info' },
+                { t: 'Executing filesystem aggregation wrapper: ./2createpackages', c: 'info' },
+                { t: 'Compressing system assets into readonly structures via squashfs-tools...', c: 'info' },
+                { t: 'Building root system memory image environment layer: initrd.gz build success', c: 'success' },
+                { t: 'Embedding custom variable data layer block: /etc/garden.txt instantiated.', c: 'info' },
+                { t: 'Running final sector compilation and burning target output image: ./3builddistro', c: 'info' },
+                { t: 'Exporting artifacts target path successfully -> /woof-CE/woof-output-s14pup64/s14pup64-custom.iso', c: 'success' },
+                { t: 'Compilation operational block complete. Status vector code: SUCCESS (0)', c: 'success' }
+            ];
+
+            let lineCounter = 0;
+            const totalSequenceSteps = structuralLogMatrix.length;
+
+            function processPipelineTick() {
+                if (lineCounter < totalSequenceSteps) {
+                    const dataObj = structuralLogMatrix[lineCounter];
+                    const entryNode = document.createElement('div');
+                    entryNode.className = `log-entry ${dataObj.c}`;
+                    entryNode.textContent = `[${new Date().toLocaleTimeString()}] ${dataObj.t}`;
+                    logContainer.appendChild(entryNode);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+
+                    lineCounter++;
+                    const calculatedProgressPct = (lineCounter / totalSequenceSteps) * 100;
+                    visualProgressFill.style.width = `${calculatedProgressPct}%`;
+
+                    // Handle linear timeout variance animation pacing emulation
+                    setTimeout(processPipelineTick, 280 + Math.random() * 250);
+                } else {
+                    // Compilation termination complete sequence triggers
+                    setTimeout(() => {
+                        window.arafSystemData.compilationStatus = 'Idle';
+                        window.arafSystemData.activeISO = 's14pup64-custom.iso';
+                        if (!window.arafSystemData.systemUpgrades.includes('Vega3-Driver-Patch')) {
+                            window.arafSystemData.systemUpgrades.push('Vega3-Driver-Patch');
+                        }
+                        
+                        layerOverlay.classList.remove('active');
+                        printTerminalRow('System ISO Build engine completed compilation safely. File generated: s14pup64-custom.iso', 'var(--deepseek-green)');
+                        
+                        // Push cross-module visual alert notice onto Gemini Viewport interface state
+                        document.getElementById('iso-success-banner').style.display = 'flex';
+                        
+                        syncUIStateAndDOMCounters();
+                    }, 800);
+                }
+            }
+
+            // Fire sequential automation timeline loops
+            setTimeout(processPipelineTick, 200);
+        }
+
+        // 7. Base Engine Initialization Subroutines
+        window.onload = () => {
+            syncUIStateAndDOMCounters();
+            initializeAssetGrid();
+        };
+    </script>
+</body>
+</html>
